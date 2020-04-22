@@ -4,6 +4,7 @@ from PySide2.QtWidgets import *
 class LogsDock(QDockWidget):
     def __init__(self, parent):
         super().__init__(parent)
+        self.parent = parent
         self.dockWidgetContentsLogs = QWidget()
         self.LogsOutput = QTextBrowser(self.dockWidgetContentsLogs)
         self.verticalLayout_3 = QVBoxLayout(self.dockWidgetContentsLogs)

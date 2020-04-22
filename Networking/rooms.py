@@ -87,10 +87,27 @@ class Rooms:
             if self.rooms[room_id].is_empty():
                 del self.rooms[room_id]
 
-    def send(self, identifier, room_id, message, sock):
-        """
-        Send data to all players in room, except sender
-        """
+    # def send(self, identifier, room_id, message, sock):
+    #     """
+    #     Send data to all players in room, except sender
+    #     """
+    #     if room_id not in self.rooms:
+    #         raise RoomNotFound()
+    #
+    #     room = self.rooms[room_id]
+    #     if not room.is_in_room(identifier):
+    #         raise NotInRoom()
+    #
+    #     for player in room.players:
+    #         if player.identifier != identifier:
+    #             player.send_udp(identifier, message)
+
+    def send(self, message):
+        for room_id in self.rooms:
+            for player in self.rooms[room_id].players:
+                player.update_from_server(message)
+
+    def send_server_update(self, identifier, room_id, message):
         if room_id not in self.rooms:
             raise RoomNotFound()
 
@@ -100,11 +117,6 @@ class Rooms:
 
         for player in room.players:
             if player.identifier != identifier:
-                player.send_udp(identifier, message)
-
-    def send(self, message):
-        for room_id in self.rooms:
-            for player in self.rooms[room_id].players:
                 player.update_from_server(message)
 
 

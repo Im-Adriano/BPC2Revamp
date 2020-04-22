@@ -1,6 +1,7 @@
 import socket
 import json
 import time
+from queue import Queue
 from threading import Thread, Lock
 from Networking.rooms import Rooms, RoomNotFound, NotInRoom, RoomFull, NoFreeRooms
 from Networking.BPServer import BPServer
@@ -11,9 +12,11 @@ def main_loop(tcp_port, udp_port, rooms):
     Start udp and tcp server threads
     """
     lock = Lock()
-    udp_server = UdpServer(udp_port, rooms, lock)
+    push_queue = Queue()
+    execution_queue = Queue()
+    udp_server = UdpServer(udp_port, rooms, lock, execution_queue, push_queue)
     tcp_server = TcpServer(tcp_port, rooms, lock)
-    bp_server = BPServer(9999, 53, rooms, lock)
+    bp_server = BPServer(9999, 53, rooms, lock, execution_queue, push_queue)
     udp_server.start()
     tcp_server.start()
     bp_server.start()
@@ -68,7 +71,7 @@ def main_loop(tcp_port, udp_port, rooms):
 
 
 class UdpServer(Thread):
-    def __init__(self, udp_port, rooms, lock):
+    def __init__(self, udp_port, rooms, lock, execution_queue, push_queue):
         """
         Create a new udp server
         """
@@ -78,6 +81,8 @@ class UdpServer(Thread):
         self.is_listening = True
         self.udp_port = udp_port
         self.msg = '{"success": %(success)s, "message":"%(message)s"}'
+        self.execution_queue = execution_queue
+        self.push_queue = push_queue
 
     def run(self):
         """
@@ -123,12 +128,15 @@ class UdpServer(Thread):
                     try:
                         if action == "send":
                             try:
-                                self.rooms.send(identifier,
-                                                room_id,
-                                                payload['message'],
-                                                self.sock)
+                                self.rooms.send_server_update(identifier,
+                                                              room_id,
+                                                              payload['message'])
                             except Exception as e:
                                 print(e)
+                        elif action == "push":
+                            self.push_queue.put(payload['message'])
+                        elif action == "execute":
+                            self.execution_queue.put(payload['message'])
                     finally:
                         self.lock.release()
                 except RoomNotFound:

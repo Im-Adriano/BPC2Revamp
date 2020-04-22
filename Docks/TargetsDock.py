@@ -3,7 +3,7 @@ import datetime
 from PySide2.QtCore import Qt, QPropertyAnimation, QByteArray
 from PySide2.QtGui import QColor
 from PySide2.QtWidgets import *
-
+import json
 
 class TargetsDock(QDockWidget):
     def __init__(self, parent, error, log):
@@ -22,13 +22,6 @@ class TargetsDock(QDockWidget):
 
     def setup_ui(self):
         self.setFeatures(QDockWidget.DockWidgetFloatable | QDockWidget.DockWidgetMovable)
-
-        __qtreewidgetitem = QTreeWidgetItem(self.TargetTree)
-        __qtreewidgetitem.setFlags(
-            Qt.ItemIsSelectable | Qt.ItemIsDragEnabled | Qt.ItemIsUserCheckable | Qt.ItemIsEnabled | Qt.ItemIsTristate)
-        __qtreewidgetitem1 = QTreeWidgetItem(self.TargetTree)
-        __qtreewidgetitem1.setFlags(
-            Qt.ItemIsSelectable | Qt.ItemIsDragEnabled | Qt.ItemIsUserCheckable | Qt.ItemIsEnabled | Qt.ItemIsTristate)
 
         self.TargetTree.setSortingEnabled(True)
         self.TargetTree.setAnimated(False)
@@ -49,24 +42,8 @@ class TargetsDock(QDockWidget):
 
     def setup_ui_text(self):
         self.setWindowTitle("Targets")
-        ___qtreewidgetitem = self.TargetTree.headerItem()
-        ___qtreewidgetitem.setText(1, "Last Call")
-        ___qtreewidgetitem.setText(0, "Target")
-
-        __sortingEnabled = self.TargetTree.isSortingEnabled()
-        self.TargetTree.setSortingEnabled(False)
-        ___qtreewidgetitem1 = self.TargetTree.topLevelItem(0)
-        ___qtreewidgetitem1.setText(1, "12:31 4/16/2020")
-        ___qtreewidgetitem1.setText(0, "192.168.1.1")
-        ___qtreewidgetitem1.setFlags(___qtreewidgetitem1.flags() | Qt.ItemIsUserCheckable)
-        ___qtreewidgetitem1.setCheckState(0, Qt.Unchecked)
-        ___qtreewidgetitem2 = self.TargetTree.topLevelItem(1)
-        ___qtreewidgetitem2.setText(1, "12:32 4/16/2020")
-        ___qtreewidgetitem2.setText(0, "10.10.10.10")
-        ___qtreewidgetitem2.setFlags(___qtreewidgetitem1.flags() | Qt.ItemIsUserCheckable)
-        ___qtreewidgetitem2.setCheckState(0, Qt.Unchecked)
-        self.TargetTree.setSortingEnabled(__sortingEnabled)
-
+        self.TargetTree.headerItem().setText(1, "Last Call")
+        self.TargetTree.headerItem().setText(0, "Target")
         self.ClearSelectedTargetsButton.setText("Clear Selected")
         self.CreateGroupButton.setText("Create Group")
         self.TargetSendToStageButton.setText("Send To Stage")
@@ -99,6 +76,7 @@ class TargetsDock(QDockWidget):
             root = self.TargetTree.invisibleRootItem()
             num = root.childCount()
             one_selected = False
+            d = {text: list()}
             for i in range(num):
                 child = root.child(i)
                 if child.checkState(0):
@@ -106,8 +84,10 @@ class TargetsDock(QDockWidget):
                     c = QTreeWidgetItem()
                     c.setText(0, child.text(0))
                     item.addChild(c)
+                    d[text].append(child.text(0))
             if one_selected:
                 self.parent.groups_dock.add_group(item)
+                self.parent.connection.send(f'GROUP ADD {json.dumps(d)}')
             else:
                 self.error('No targets selected to form group')
         else:

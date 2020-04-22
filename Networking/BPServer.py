@@ -1,6 +1,5 @@
 import queue
 import socket
-from queue import Queue
 from threading import Thread
 
 MAGIC_BYTES = b'\x42\x50\x3c\x33'
@@ -12,7 +11,7 @@ RAW_COMMAND = MAGIC_BYTES + b'\x02\x01'
 
 
 class BPServer(Thread):
-    def __init__(self, local_udp_port, remote_udp_port, rooms, lock):
+    def __init__(self, local_udp_port, remote_udp_port, rooms, lock, execution_queue, push_queue):
         """
         Create a new udp server
         """
@@ -22,8 +21,8 @@ class BPServer(Thread):
         self.is_listening = True
         self.udp_port = local_udp_port
         self.remote_port = remote_udp_port
-        self.execution_queue = Queue()
-        self.push_queue = Queue()
+        self.execution_queue = execution_queue
+        self.push_queue = push_queue
 
     def add_to_execution(self, task):
         self.execution_queue.put(task)
@@ -40,6 +39,7 @@ class BPServer(Thread):
         self.sock.bind(("0.0.0.0", self.udp_port))
         self.sock.setblocking(0)
         self.sock.settimeout(.1)
+        target_cmds = {}
         while self.is_listening:
             try:
                 data, address = self.sock.recvfrom(1024)
@@ -55,9 +55,11 @@ class BPServer(Thread):
                         length = len(cmd).to_bytes(2, byteorder='big')
                         packet = MAGIC_BYTES + RAW_COMMAND_BYTE + b'\x01' + b'\x00\x00\x00\x00' + target_address + length + cmd
                         self.sock.sendto(packet, (target, self.remote_port))
+                continue
             except:
                 continue
-            target_cmds = {}
+            if len(target_cmds) == 0:
+                pass
             cur_target = address[0]
             target_address = bytes(map(int, cur_target.split('.')))
             cmd_num = data[6:10]

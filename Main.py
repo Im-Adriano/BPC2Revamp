@@ -1,7 +1,7 @@
 import argparse
 import sys
 from PySide2.QtWidgets import QApplication
-from MainWindow import MainWindow
+from Windows.MainWindow import MainWindow
 from Networking.rooms import Rooms
 from Networking.server import main_loop
 

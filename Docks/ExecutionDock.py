@@ -1,7 +1,4 @@
-from PySide2.QtGui import QStandardItemModel, Qt
 from PySide2.QtWidgets import *
-
-# from TreeConversion import fill_model_from_json, model_to_dict
 
 
 class ExecutionDock(QDockWidget):
@@ -21,14 +18,6 @@ class ExecutionDock(QDockWidget):
 
     def setup_ui(self):
         self.setFeatures(QDockWidget.DockWidgetFloatable | QDockWidget.DockWidgetMovable)
-
-        # __qtreewidgetitem4 = QTreeWidgetItem(self.StagedCommandsTree)
-        # __qtreewidgetitem5 = QTreeWidgetItem(__qtreewidgetitem4)
-        # QTreeWidgetItem(__qtreewidgetitem5)
-        # __qtreewidgetitem6 = QTreeWidgetItem(__qtreewidgetitem4)
-        # QTreeWidgetItem(__qtreewidgetitem6)
-        # temp = {'LS': {'TARGETS': {'192.168.1.1': {}, '10.10.10.10': {}}, 'COMMANDS': {'ls -la': {}}}, 'IP': {'TARGETS': {'LINUX': {'192.168.1.1': {}, '10.10.10.10': {}}}, 'COMMANDS': {'IP A': {}}}}
-        # fill_model_from_json(self.StagedCommandsTree.invisibleRootItem(), temp)
         self.verticalLayout_7.addWidget(self.StagedCommandsTree)
 
         self.horizontalLayout_4.addWidget(self.ExecuteButton)
@@ -44,28 +33,13 @@ class ExecutionDock(QDockWidget):
     def setup_ui_text(self):
         self.setWindowTitle("Execution")
         self.StagedCommandsTree.headerItem().setText(0, "Stages")
-        # self.StagedCommandsTree.model().setHeaderData(0, Qt.Horizontal, 'Stages')
-
-        # __sortingEnabled2 = self.StagedCommandsTree.isSortingEnabled()
-        # self.StagedCommandsTree.setSortingEnabled(False)
-        # ___qtreewidgetitem11 = self.StagedCommandsTree.topLevelItem(0)
-        # ___qtreewidgetitem11.setText(0, "IPCONFIG")
-        # ___qtreewidgetitem12 = ___qtreewidgetitem11.child(0)
-        # ___qtreewidgetitem12.setText(0, "TARGETS")
-        # ___qtreewidgetitem13 = ___qtreewidgetitem12.child(0)
-        # ___qtreewidgetitem13.setText(0, "10.10.10.10")
-        # ___qtreewidgetitem14 = ___qtreewidgetitem11.child(1)
-        # ___qtreewidgetitem14.setText(0, "COMMANDS")
-        # ___qtreewidgetitem15 = ___qtreewidgetitem14.child(0)
-        # ___qtreewidgetitem15.setText(0, "powershell.exe -c ipconfig")
-        # self.StagedCommandsTree.setSortingEnabled(__sortingEnabled2)
-
         self.ExecuteButton.setText("Execute")
         self.PushButton.setText("Push")
         self.RemoveButton.setText("Remove")
 
     def setup_ui_connections(self):
         self.RemoveButton.clicked.connect(self.remove)
+        self.PushButton.clicked.connect(self.push)
 
     def add_stage(self, stage):
         self.StagedCommandsTree.addTopLevelItem(stage)
@@ -83,7 +57,45 @@ class ExecutionDock(QDockWidget):
         for c in to_remove:
             root.removeChild(c)
             self.log(f'Stage {c.text(0)} removed from execution stage')
+            self.parent.connection.send(f'STAGE REMOVE {c.text(0)}')
+
+    def stages_to_dict(self):
+        root = self.StagedCommandsTree.invisibleRootItem()
+        num = root.childCount()
+        to_stage = list()
+        d = {}
+        for i in range(num):
+            child = root.child(i)
+            if child.checkState(0):
+                to_stage.append(child)
+
+        for c in to_stage:
+            targets = c.child(0)
+            commands = c.child(1)
+            for i in range(targets.childCount()):
+                child = targets.child(i)
+                if child.childCount() > 0:
+                    # A Group
+                    for j in range(child.childCount()):
+                        tar = child.child(j).text(0)
+                        if tar not in d:
+                            d[tar] = list()
+                        for k in range(commands.childCount()):
+                            command = commands.child(k).text(0)
+                            d[tar].append(command)
+                else:
+                    tar = child.text(0)
+                    if tar not in d:
+                        d[tar] = list()
+                    for k in range(commands.childCount()):
+                        command = commands.child(k).text(0)
+                        d[tar].append(command)
+        return d
 
     def execute(self):
-        pass
+        d = self.stages_to_dict()
+        self.parent.connection.execute(d)
 
+    def push(self):
+        d = self.stages_to_dict()
+        self.parent.connection.push(d)

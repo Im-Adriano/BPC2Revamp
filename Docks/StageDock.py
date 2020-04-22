@@ -1,6 +1,6 @@
 from PySide2.QtCore import QSize, Qt
 from PySide2.QtWidgets import *
-
+import json
 
 class StageDock(QDockWidget):
     def __init__(self, parent, error, log):
@@ -127,8 +127,9 @@ class StageDock(QDockWidget):
         if self.lineEdit.text().strip() == '':
             self.error('Stage name required')
             return
+        name = self.lineEdit.text()
         item = QTreeWidgetItem()
-        item.setText(0, self.lineEdit.text())
+        item.setText(0, name)
         item.setFlags(item.flags() | Qt.ItemIsUserCheckable)
         item.setCheckState(0, Qt.Unchecked)
 
@@ -136,12 +137,22 @@ class StageDock(QDockWidget):
         targets.setText(0, 'TARGETS')
         root = self.TargetList.invisibleRootItem()
         num = root.childCount()
+        d = {
+            name: {
+                'TARGETS': {},
+                'COMMANDS': {}
+            }
+        }
         if num == 0:
             self.error('Add targets to the stage')
             return
         for i in range(num):
             child = root.child(i)
             targets.addChild(child.clone())
+            d[name]['TARGETS'][child.text(0)] = {}
+            if child.childCount() != 0:
+                for j in range(child.childCount()):
+                    d[name]['TARGETS'][child.text(0)][child.child(j).text(0)] = {}
 
         commands = QTreeWidgetItem(item)
         commands.setText(0, 'COMMANDS')
@@ -153,6 +164,8 @@ class StageDock(QDockWidget):
         for i in range(num):
             child = root.child(i)
             commands.addChild(child.clone())
+            d[name]['COMMANDS'][child.text(0)] = {}
 
         self.parent.execution_dock.add_stage(item)
         self.clear_stage()
+        self.parent.connection.send(f'STAGE ADD {json.dumps(d)}')

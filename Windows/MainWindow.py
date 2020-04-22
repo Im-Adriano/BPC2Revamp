@@ -125,6 +125,47 @@ class MainWindow(QMainWindow):
                 if 'Target' in message:
                     target = message.split(' ')[1]
                     self.targets_dock.add_target(target)
+                elif 'GROUP ADD' in message:
+                    group = json.loads(message.split('GROUP ADD')[1])
+                    for k, v in group.items():
+                        item = QTreeWidgetItem()
+                        item.setText(0, k)
+                        item.setFlags(item.flags() | Qt.ItemIsUserCheckable)
+                        item.setCheckState(0, Qt.Unchecked)
+                        for ip in v:
+                            c = QTreeWidgetItem()
+                            c.setText(0, ip)
+                            item.addChild(c)
+                        self.groups_dock.add_group(item)
+                elif 'GROUP REMOVE' in message:
+                    group = message.split('GROUP REMOVE ')[1]
+                    root = self.groups_dock.GroupsTree.invisibleRootItem()
+                    num = root.childCount()
+                    for i in range(num):
+                        child = root.child(i)
+                        if child.text(0) == group:
+                            root.removeChild(child)
+                            self.logs_dock.log(f'Group {child.text(0)} removed')
+                            break
+                elif 'STAGE ADD' in message:
+                    stage = json.loads(message.split('STAGE ADD ')[1])
+                    fill_model_from_json(self.execution_dock.StagedCommandsTree.invisibleRootItem(), stage)
+                    root = self.execution_dock.StagedCommandsTree.invisibleRootItem()
+                    num = root.childCount()
+                    for i in range(num):
+                        child = root.child(i)
+                        child.setFlags(child.flags() | Qt.ItemIsUserCheckable)
+                        child.setCheckState(0, Qt.Unchecked)
+                elif 'STAGE REMOVE' in message:
+                    stage = message.split('STAGE REMOVE ')[1]
+                    root = self.execution_dock.StagedCommandsTree.invisibleRootItem()
+                    num = root.childCount()
+                    for i in range(num):
+                        child = root.child(i)
+                        if child.text(0) == stage:
+                            root.removeChild(child)
+                            self.logs_dock.log(f'Stage {child.text(0)} removed')
+                            break
 
     def ask_for_server_info(self):
         good = False

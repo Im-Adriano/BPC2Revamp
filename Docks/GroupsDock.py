@@ -19,10 +19,6 @@ class GroupDock(QDockWidget):
 
     def setup_ui(self):
         self.setFeatures(QDockWidget.DockWidgetFloatable | QDockWidget.DockWidgetMovable)
-        # __qtreewidgetitem2 = QTreeWidgetItem(self.GroupsTree)
-        # QTreeWidgetItem(__qtreewidgetitem2)
-        # __qtreewidgetitem3 = QTreeWidgetItem(self.GroupsTree)
-        # QTreeWidgetItem(__qtreewidgetitem3)
         self.GroupsTree.setSortingEnabled(True)
 
         self.GroupsButtonLayout.addWidget(self.ClearSelectedGroupButton)
@@ -38,25 +34,7 @@ class GroupDock(QDockWidget):
 
     def setup_ui_text(self):
         self.setWindowTitle("Groups")
-        ___qtreewidgetitem3 = self.GroupsTree.headerItem()
-        ___qtreewidgetitem3.setText(0, "Groups")
-
-        # __sortingEnabled1 = self.GroupsTree.isSortingEnabled()
-        # self.GroupsTree.setSortingEnabled(False)
-        # ___qtreewidgetitem4 = self.GroupsTree.topLevelItem(0)
-        # ___qtreewidgetitem4.setText(0, "WINDOWS BOIS")
-        # ___qtreewidgetitem4.setFlags(___qtreewidgetitem4.flags() | Qt.ItemIsUserCheckable)
-        # ___qtreewidgetitem4.setCheckState(0, Qt.Unchecked)
-        # ___qtreewidgetitem5 = ___qtreewidgetitem4.child(0)
-        # ___qtreewidgetitem5.setText(0, "10.10.10.10")
-        # ___qtreewidgetitem6 = self.GroupsTree.topLevelItem(1)
-        # ___qtreewidgetitem6.setText(0, "LINUX BOIS")
-        # ___qtreewidgetitem6.setFlags(___qtreewidgetitem6.flags() | Qt.ItemIsUserCheckable)
-        # ___qtreewidgetitem6.setCheckState(0, Qt.Unchecked)
-        # ___qtreewidgetitem7 = ___qtreewidgetitem6.child(0)
-        # ___qtreewidgetitem7.setText(0, "192.168.1.1")
-        # self.GroupsTree.setSortingEnabled(__sortingEnabled1)
-
+        self.GroupsTree.headerItem().setText(0, "Groups")
         self.ClearSelectedGroupButton.setText("Clear Selected")
         self.DeleteGroupButton.setText("Delete")
         self.SendGroupToStageButton.setText("Send To Stage")
@@ -82,6 +60,7 @@ class GroupDock(QDockWidget):
         for c in to_remove:
             root.removeChild(c)
             self.log(f'Group {c.text(0)} removed')
+            self.parent.connection.send(f'GROUP REMOVE {c.text(0)}')
 
     def send_to_stage(self):
         root = self.GroupsTree.invisibleRootItem()

@@ -4,6 +4,7 @@ from PySide2.QtWidgets import *
 class ErrorDock(QDockWidget):
     def __init__(self, parent):
         super().__init__(parent)
+        self.parent = parent
         self.dockWidgetContentsErrorLogs = QWidget()
         self.ErrorLogsOutput = QTextBrowser(self.dockWidgetContentsErrorLogs)
         self.verticalLayout_4 = QVBoxLayout(self.dockWidgetContentsErrorLogs)
