@@ -40,6 +40,7 @@ class ExecutionDock(QDockWidget):
     def setup_ui_connections(self):
         self.RemoveButton.clicked.connect(self.remove)
         self.PushButton.clicked.connect(self.push)
+        self.ExecuteButton.clicked.connect(self.execute)
 
     def add_stage(self, stage):
         self.StagedCommandsTree.addTopLevelItem(stage)
@@ -67,6 +68,7 @@ class ExecutionDock(QDockWidget):
         for i in range(num):
             child = root.child(i)
             if child.checkState(0):
+                self.log(f'Sending {child.text(0)} to be executed')
                 to_stage.append(child)
 
         for c in to_stage:
@@ -84,6 +86,7 @@ class ExecutionDock(QDockWidget):
                             command = commands.child(k).text(0)
                             d[tar].append(command)
                 else:
+                    # Single IP
                     tar = child.text(0)
                     if tar not in d:
                         d[tar] = list()

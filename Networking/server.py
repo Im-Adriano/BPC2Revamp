@@ -16,7 +16,7 @@ def main_loop(tcp_port, udp_port, rooms):
     execution_queue = Queue()
     udp_server = UdpServer(udp_port, rooms, lock, execution_queue, push_queue)
     tcp_server = TcpServer(tcp_port, rooms, lock)
-    bp_server = BPServer(9999, 53, rooms, lock, execution_queue, push_queue)
+    bp_server = BPServer(9999, 7777, rooms, lock, execution_queue, push_queue)
     udp_server.start()
     tcp_server.start()
     bp_server.start()

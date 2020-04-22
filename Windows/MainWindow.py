@@ -119,7 +119,6 @@ class MainWindow(QMainWindow):
     def update_from_server(self):
         messages = self.connection.get_messages()
         if len(messages) != 0:
-            print(messages)
             for message in messages:
                 message = json.loads(message.decode())
                 if 'Target' in message:
@@ -166,6 +165,17 @@ class MainWindow(QMainWindow):
                             root.removeChild(child)
                             self.logs_dock.log(f'Stage {child.text(0)} removed')
                             break
+                elif 'RESPONSE' in message:
+                    _, target, response = message.split(' ', maxsplit=2)
+                    if self.responses_dock.TargetChooser.findText(target) != -1:
+                        if len(self.responses_dock.responses[target]) == 5:
+                            self.responses_dock.responses[target] = self.responses_dock.responses[target][1:]
+                        self.responses_dock.responses[target].append(response)
+
+                    else:
+                        self.responses_dock.responses[target] = list()
+                        self.responses_dock.responses[target].append(response)
+                        self.responses_dock.TargetChooser.addItem(target)
 
     def ask_for_server_info(self):
         good = False
