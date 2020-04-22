@@ -2,3 +2,4 @@ venv
 groups.json
 staged_commands.json
 targets.json
+.idea
