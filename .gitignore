@@ -5,3 +5,4 @@ targets.json
 .idea
 __pycache__
 *.ui
+*.py[cod]
