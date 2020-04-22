@@ -4,3 +4,4 @@ staged_commands.json
 targets.json
 .idea
 __pycache__
+*.ui
