@@ -63,6 +63,7 @@ def main_loop(tcp_port, udp_port, rooms):
             print("Shutting down  server...")
             udp_server.is_listening = False
             tcp_server.is_listening = False
+            bp_server.is_listening = False
             is_running = False
 
     udp_server.join()

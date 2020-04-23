@@ -37,7 +37,7 @@ class BPServer(Thread):
         self.sock = socket.socket(socket.AF_INET,
                                   socket.SOCK_DGRAM)
         self.sock.bind(("", self.udp_port))
-        # self.sock.setblocking(0)
+        self.sock.setblocking(0)
         self.sock.settimeout(.1)
         target_cmds = {}
         while self.is_listening:
