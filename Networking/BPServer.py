@@ -61,6 +61,9 @@ class BPServer(Thread):
             if len(target_cmds) == 0:
                 try:
                     target_cmds = self.execution_queue.get_nowait()
+                    self.lock.acquire()
+                    self.rooms.send(f'QUEUE {self.execution_queue.qsize()}')
+                    self.lock.release()
                 except queue.Empty:
                     pass
             cur_target = address[0]

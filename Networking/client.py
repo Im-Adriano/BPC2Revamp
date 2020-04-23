@@ -195,7 +195,7 @@ class SocketThread:
         Get responses from server
         """
         while True:
-            data, addr = self.sock.recvfrom(1024)
+            data, addr = self.sock.recvfrom(4096)
             self.pipe.send(data)
 
     def stop(self):

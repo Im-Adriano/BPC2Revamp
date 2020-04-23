@@ -50,7 +50,7 @@ def main_loop(tcp_port, udp_port, rooms):
                 for player in room.players:
                     print(player.identifier)
             except:
-                print("Error while getting room informations")
+                print("Error while getting room information")
         elif cmd.startswith("user "):
             try:
                 player = rooms.players[cmd[5:]]
@@ -58,7 +58,7 @@ def main_loop(tcp_port, udp_port, rooms):
                                       player.udp_addr[0],
                                       player.udp_addr[1]))
             except:
-                print("Error while getting user informations")
+                print("Error while getting user information")
         elif cmd == "quit":
             print("Shutting down  server...")
             udp_server.is_listening = False
@@ -95,7 +95,7 @@ class UdpServer(Thread):
         self.sock.settimeout(5)
         while self.is_listening:
             try:
-                data, address = self.sock.recvfrom(1024)
+                data, address = self.sock.recvfrom(4096)
             except socket.timeout:
                 continue
 

@@ -22,6 +22,7 @@ class MainWindow(QMainWindow):
         self.connection = None
         self.udp_port = udp_listen_port
         self.ask_for_server_info()
+        self.statusBar().showMessage(f'Room: {self.connection.room_id}')
         self.logs_dock = LogsDock(self)
         self.error_dock = ErrorDock(self)
         self.responses_dock = ResponsesDock(self)
@@ -176,6 +177,9 @@ class MainWindow(QMainWindow):
                         self.responses_dock.responses[target] = list()
                         self.responses_dock.responses[target].append(response)
                         self.responses_dock.TargetChooser.addItem(target)
+                elif 'QUEUE' in message:
+                    queue_size = int(message.split('QUEUE ')[1])
+                    self.statusBar().showMessage(f'Room: {self.connection.room_id} Queue size for execution: {queue_size}')
 
     def ask_for_server_info(self):
         good = False
