@@ -29,11 +29,11 @@ class BPServer(Thread):
         self.time_to_wait = 120
         self.time_waiting = datetime.datetime.now()
 
-    def add_to_execution(self, task):
-        self.execution_queue.put(task)
-
-    def add_to_push(self, task):
-        self.push_queue.put(task)
+    # def add_to_execution(self, task):
+    #     self.execution_queue.put(task)
+    #
+    # def add_to_push(self, task):
+    #     self.push_queue.put(task)
 
     def sendUpdate(self, ip, name="BP"):
         host = "http://pwnboard.win/generic"

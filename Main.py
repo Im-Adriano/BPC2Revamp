@@ -11,14 +11,14 @@ if __name__ == '__main__':
                         dest='server',
                         help='Run a server instance',
                         action='store_true')
-    parser.add_argument('--tcpport',
-                        dest='tcp_port',
-                        help='Listening tcp port (Server only)',
+    parser.add_argument('--serverport',
+                        dest='serverport',
+                        help='TCP/UDP port to listen on (Server only)',
                         type=int,
                         default="1234")
-    parser.add_argument('--udpport',
-                        dest='udp_port',
-                        help='Listening udp port (Server or Client)',
+    parser.add_argument('--clientport',
+                        dest='clientport',
+                        help='UDP port to listen on (Client only)',
                         type=int,
                         default="8888")
     parser.add_argument('--capacity',
@@ -30,11 +30,11 @@ if __name__ == '__main__':
     args = parser.parse_args()
     if args.server:
         rooms = Rooms(args.room_capacity)
-        main_loop(args.tcp_port, args.udp_port, rooms)
+        main_loop(args.serverport, args.serverport, rooms)
     else:
         app = QApplication(sys.argv)
 
-        window = MainWindow(args.udp_port)
+        window = MainWindow(args.clientport)
         window.show()
 
         sys.exit(app.exec_())
