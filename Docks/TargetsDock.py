@@ -5,6 +5,7 @@ from PySide2.QtGui import QColor
 from PySide2.QtWidgets import *
 import json
 
+
 class TargetsDock(QDockWidget):
     def __init__(self, parent, error, log):
         super().__init__(parent)
@@ -35,6 +36,9 @@ class TargetsDock(QDockWidget):
 
         self.verticalLayout.addWidget(self.TargetTree)
         self.verticalLayout.addLayout(self.TargetsButtonLayout)
+
+        self.TargetTree.setContextMenuPolicy(Qt.CustomContextMenu)
+        self.TargetTree.customContextMenuRequested.connect(self.right_click_tree_node)
 
         self.setWidget(self.dockWidgetContentsTargets)
         self.setup_ui_connections()
@@ -114,3 +118,18 @@ class TargetsDock(QDockWidget):
         item.setFlags(item.flags() | Qt.ItemIsUserCheckable)
         item.setCheckState(0, Qt.Unchecked)
         self.TargetTree.addTopLevelItem(item)
+
+    def right_click_tree_node(self, event):
+        item = self.TargetTree.itemAt(event)
+        self.parent.responses_dock.show_responses([item.text(0)])
+
+    def edit_group(self, item):
+        self.clear_selection()
+        root = self.TargetTree.invisibleRootItem()
+        num = root.childCount()
+        for i in range(item.childCount()):
+            for j in range(num):
+                child = root.child(j)
+                if child.text(0) == item.child(i).text(0):
+                    child.setCheckState(0, Qt.Checked)
+

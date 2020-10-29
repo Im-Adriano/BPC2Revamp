@@ -1,3 +1,4 @@
+from PySide2.QtCore import Qt
 from PySide2.QtWidgets import *
 
 
@@ -14,6 +15,11 @@ class ExecutionDock(QDockWidget):
         self.horizontalLayout_4 = QHBoxLayout()
         self.StagedCommandsTree = QTreeWidget(self.dockWidgetContents_2)
         self.verticalLayout_7 = QVBoxLayout(self.dockWidgetContents_2)
+
+        self.StagedCommandsTree.setContextMenuPolicy(Qt.CustomContextMenu)
+        self.StagedCommandsTree.customContextMenuRequested.connect(self.right_click_tree_node)
+        self.StagedCommandsTree.itemDoubleClicked.connect(self.left_click_tree_node)
+
         self.setup_ui()
 
     def setup_ui(self):
@@ -102,3 +108,38 @@ class ExecutionDock(QDockWidget):
     def push(self):
         d = self.stages_to_dict()
         self.parent.connection.push(d)
+
+    def right_click_tree_node(self, event):
+        item = self.StagedCommandsTree.itemAt(event)
+        num = item.childCount()
+        if item.text(0) == 'COMMANDS':
+            return
+        if num > 0:
+            get_responses = []
+            for i in range(num):
+                if item.child(i).text(0) != 'COMMANDS':
+                    num2 = item.child(i).childCount()
+                    if num2 > 0:
+                        for j in range(num2):
+                            num3 = item.child(i).child(j).childCount()
+                            if num3 > 0:
+                                for k in range(num3):
+                                    get_responses.append(item.child(i).child(j).child(k).text(0))
+                            else:
+                                get_responses.append(item.child(i).child(j).text(0))
+                    else:
+                        get_responses.append(item.child(i).text(0))
+            self.parent.responses_dock.show_responses(get_responses)
+        else:
+            self.parent.responses_dock.show_responses([item.text(0)])
+
+    def left_click_tree_node(self, item, _):
+        if not item.parent():
+            root = self.StagedCommandsTree.invisibleRootItem()
+            root.removeChild(item)
+            self.log(f'Stage {item.text(0)} removed for editing from execution stage')
+            self.parent.connection.send(f'STAGE REMOVE {item.text(0)}')
+            self.parent.stage_dock.edit_staged_stage(item)
+
+            del item
+

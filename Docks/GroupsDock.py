@@ -15,6 +15,11 @@ class GroupDock(QDockWidget):
         self.GroupsButtonLayout = QHBoxLayout()
         self.GroupsTree = QTreeWidget(self.dockWidgetContentsGroups)
         self.verticalLayout_2 = QVBoxLayout(self.dockWidgetContentsGroups)
+
+        self.GroupsTree.setContextMenuPolicy(Qt.CustomContextMenu)
+        self.GroupsTree.customContextMenuRequested.connect(self.right_click_tree_node)
+        self.GroupsTree.itemDoubleClicked.connect(self.left_click_tree_node)
+
         self.setup_ui()
 
     def setup_ui(self):
@@ -86,3 +91,24 @@ class GroupDock(QDockWidget):
         for i in range(num):
             child = root.child(i)
             child.setCheckState(0, Qt.Unchecked)
+
+    def right_click_tree_node(self, event):
+        item = self.GroupsTree.itemAt(event)
+        if item.childCount() > 0:
+            num = item.childCount()
+            get_responses = []
+            for i in range(num):
+                get_responses.append(item.child(i).text(0))
+            self.parent.responses_dock.show_responses(get_responses)
+        else:
+            self.parent.responses_dock.show_responses([item.text(0)])
+
+    def left_click_tree_node(self, item, _):
+        if not item.parent():
+            root = self.GroupsTree.invisibleRootItem()
+            root.removeChild(item)
+            self.log(f'Group {item.text(0)} removed for editing')
+            self.parent.connection.send(f'GROUP REMOVE {item.text(0)}')
+            self.parent.targets_dock.edit_group(item)
+
+            del item

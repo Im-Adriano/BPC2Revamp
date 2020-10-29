@@ -20,4 +20,4 @@ class LogsDock(QDockWidget):
         self.setWindowTitle("Logs")
 
     def log(self, s):
-        self.LogsOutput.append(s)
+        self.LogsOutput.append(str(s))

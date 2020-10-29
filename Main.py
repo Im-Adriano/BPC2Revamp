@@ -1,9 +1,5 @@
 import argparse
 import sys
-from PySide2.QtWidgets import QApplication
-from Windows.MainWindow import MainWindow
-from Networking.rooms import Rooms
-from Networking.server import main_loop
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(description='BP C2')
@@ -29,9 +25,15 @@ if __name__ == '__main__':
 
     args = parser.parse_args()
     if args.server:
+        from Networking.rooms import Rooms
+        from Networking.server import main_loop
+
         rooms = Rooms(args.room_capacity)
         main_loop(args.serverport, args.serverport, rooms)
     else:
+        from PySide2.QtWidgets import QApplication
+        from Windows.MainWindow import MainWindow
+
         app = QApplication(sys.argv)
 
         window = MainWindow(args.clientport)

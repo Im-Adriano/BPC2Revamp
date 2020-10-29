@@ -25,7 +25,7 @@ class MainWindow(QMainWindow):
         self.statusBar().showMessage(f'Room: {self.connection.room_id}')
         self.logs_dock = LogsDock(self)
         self.error_dock = ErrorDock(self)
-        self.responses_dock = ResponsesDock(self)
+        self.responses_dock = ResponsesDock(self, self.error_dock.error)
         self.stage_dock = StageDock(self, self.error_dock.error, self.logs_dock.log)
         self.groups_dock = GroupDock(self, self.error_dock.error, self.logs_dock.log)
         self.targets_dock = TargetsDock(self, self.error_dock.error, self.logs_dock.log)
@@ -168,15 +168,13 @@ class MainWindow(QMainWindow):
                             break
                 elif 'RESPONSE' in message:
                     _, target, response = message.split(' ', maxsplit=2)
-                    if self.responses_dock.TargetChooser.findText(target) != -1:
+                    if target in self.responses_dock.responses:
                         if len(self.responses_dock.responses[target]) == 5:
                             self.responses_dock.responses[target] = self.responses_dock.responses[target][1:]
                         self.responses_dock.responses[target].append(response)
-
                     else:
                         self.responses_dock.responses[target] = list()
                         self.responses_dock.responses[target].append(response)
-                        self.responses_dock.TargetChooser.addItem(target)
                 elif 'QUEUE' in message:
                     queue_size = int(message.split('QUEUE ')[1])
                     self.statusBar().showMessage(f'Room: {self.connection.room_id} Queue size for execution: {queue_size}')

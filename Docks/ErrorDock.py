@@ -21,4 +21,4 @@ class ErrorDock(QDockWidget):
         self.setWindowTitle("Error Logs")
 
     def error(self, s):
-        self.ErrorLogsOutput.append(s)
+        self.ErrorLogsOutput.append(str(s))

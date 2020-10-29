@@ -2,32 +2,32 @@ from PySide2.QtWidgets import *
 
 
 class ResponsesDock(QDockWidget):
-    def __init__(self, parent):
+    def __init__(self, parent, error):
         super().__init__(parent)
-        self.dockWidgetContentsLogs = QWidget()
-        self.TargetChooser = QComboBox(self.dockWidgetContentsLogs)
-        self.ResponsesOutput = QTextBrowser(self.dockWidgetContentsLogs)
-        self.verticalLayout_3 = QVBoxLayout(self.dockWidgetContentsLogs)
+        self.dockWidgetContentsLogs = QTabWidget()
+        self.error = error
         self.responses = {'': ''}
         self.setup_ui()
 
     def setup_ui(self):
         self.setFeatures(QDockWidget.DockWidgetFloatable | QDockWidget.DockWidgetMovable)
-        self.verticalLayout_3.addWidget(self.TargetChooser)
-        self.verticalLayout_3.addWidget(self.ResponsesOutput)
-        self.TargetChooser.addItem('')
         self.setWidget(self.dockWidgetContentsLogs)
-        self.setup_ui_connections()
         self.setup_ui_text()
 
     def setup_ui_text(self):
         self.setWindowTitle("Responses")
 
-    def setup_ui_connections(self):
-        self.TargetChooser.currentTextChanged.connect(self.changed_target)
-
-    def changed_target(self):
-        text = self.TargetChooser.currentText()
-        self.ResponsesOutput.setText('')
-        for t in self.responses[text]:
-            self.ResponsesOutput.append(t)
+    def show_responses(self, targets):
+        self.dockWidgetContentsLogs.clear()
+        for target in targets:
+            wig = QWidget()
+            self.dockWidgetContentsLogs.addTab(wig, target)
+            layout = QVBoxLayout()
+            text_box = QTextBrowser()
+            layout.addWidget(text_box)
+            try:
+                for t in self.responses[target]:
+                    text_box.append(t)
+            except KeyError:
+                self.error(f'No responses for: {target}')
+            wig.setLayout(layout)

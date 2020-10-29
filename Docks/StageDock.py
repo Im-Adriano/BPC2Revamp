@@ -2,6 +2,7 @@ from PySide2.QtCore import QSize, Qt
 from PySide2.QtWidgets import *
 import json
 
+
 class StageDock(QDockWidget):
     def __init__(self, parent, error, log):
         super().__init__(parent)
@@ -169,3 +170,34 @@ class StageDock(QDockWidget):
         self.parent.execution_dock.add_stage(item)
         self.clear_stage()
         self.parent.connection.send(f'STAGE ADD {json.dumps(d)}')
+
+    def edit_staged_stage(self, item):
+        target_item = item.child(0)
+        command_item = item.child(1)
+        self.clear_stage()
+        for i in range(target_item.childCount()):
+            tar = target_item.child(i)
+            temp = QTreeWidgetItem()
+            temp.setText(0, tar.text(0))
+            children = tar.takeChildren()
+            for child in children:
+                temp.addChild(child.clone())
+            tar.addChildren(children)
+            temp.setFlags(item.flags() | Qt.ItemIsUserCheckable)
+            temp.setCheckState(0, Qt.Unchecked)
+            self.TargetList.addTopLevelItem(temp)
+
+        for i in range(command_item.childCount()):
+            tar = command_item.child(i)
+            temp = QTreeWidgetItem()
+            temp.setText(0, tar.text(0))
+            children = tar.takeChildren()
+            for child in children:
+                temp.addChild(child.clone())
+            tar.addChildren(children)
+            temp.setFlags(item.flags() | Qt.ItemIsUserCheckable)
+            temp.setCheckState(0, Qt.Unchecked)
+            self.CommandList.addTopLevelItem(temp)
+
+        self.lineEdit.setText(item.text(0))
+
