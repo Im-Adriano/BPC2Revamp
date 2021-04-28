@@ -7,7 +7,7 @@ from Networking.rooms import Rooms, RoomNotFound, NotInRoom, RoomFull, NoFreeRoo
 from Networking.BPServer import BPServer
 
 
-def main_loop(tcp_port, udp_port, rooms):
+def main_loop(tcp_port, udp_port, rooms, bp_listen_port, bp_push_port, hivemind_server, hivemind_port):
     """
     Start udp and tcp server threads
     """
@@ -16,7 +16,11 @@ def main_loop(tcp_port, udp_port, rooms):
     execution_queue = Queue()
     udp_server = UdpServer(udp_port, rooms, lock, execution_queue, push_queue)
     tcp_server = TcpServer(tcp_port, rooms, lock)
-    bp_server = BPServer(9999, 7777, rooms, lock, execution_queue, push_queue)
+    if hivemind_server is not None and hivemind_port is not None:
+        bp_server = BPServer(bp_listen_port, bp_push_port, rooms, lock, execution_queue, push_queue, hivemind_server, hivemind_port)
+    else:
+        bp_server = BPServer(bp_listen_port, bp_push_port, rooms, lock, execution_queue, push_queue)
+
     udp_server.start()
     tcp_server.start()
     bp_server.start()
